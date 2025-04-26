@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Advanced Student Management - Edit Feature</title>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #e0f7fa;
+    }
+    h1 {
+      text-align: center;
+      color: #00796b;
+    }
+    .container {
+      max-width: 700px;
+      margin: auto;
+      background: #ffffff;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+      animation: fadeIn 1s;
+    }
+    @keyframes fadeIn {
+      from {opacity: 0;}
+      to {opacity: 1;}
+    }
+    input, button, select {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      box-sizing: border-box;
+      font-size: 16px;
+    }
+    button {
+      background-color: #00796b;
+      color: white;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button:hover {
+      background-color: #004d40;
+    }
+    .student-list {
+      margin-top: 20px;
+    }
+    .student-item {
+      background: #b2dfdb;
+      padding: 15px;
+      margin-bottom: 10px;
+      border-radius: 10px;
+      transition: 0.5s;
+    }
+    .student-item:hover {
+      background: #80cbc4;
+    }
+    .actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1> Students Management 👨🏻‍🎓</h1>
+  <div class="container">
+    <input type="text" id="name" placeholder="Enter Name ">
+    <input type="number" id="age" placeholder="Enter Age">
+    <input type="text" id="grade" placeholder="Enter Grade">
+    <button onclick="addOrUpdateStudent()">➕ Add Student</button>
+
+    <select id="sortOption" onchange="sortStudents()">
+      <option value="">-- Sort Students --</option>
+      <option value="name">Sort by Name</option>
+      <option value="age">Sort by Age</option>
+    </select>
+
+    <input type="text" id="searchName" placeholder="Search by Name 🔎" oninput="searchStudent()">
+
+    <div class="student-list" id="studentList"></div>
+  </div>
+
+  <script>
+    let students = JSON.parse(localStorage.getItem('students')) || [];
+    let editIndex = -1; // ये बताता है कि हम किस student को edit कर रहे हैं
+
+    function saveToLocalStorage() {
+      localStorage.setItem('students', JSON.stringify(students));
+    }
+
+    function renderStudents(list = students) {
+      const studentList = document.getElementById('studentList');
+      studentList.innerHTML = '';
+      list.forEach((student, index) => {
+        const div = document.createElement('div');
+        div.className = 'student-item';
+        div.innerHTML = `
+          <strong>${student.name}</strong><br>
+          Age: ${student.age} | Grade: ${student.grade}
+          <div class="actions">
+            <button onclick="editStudent(${index})">✏️ Edit</button>
+            <button onclick="removeStudent(${index})">🗑️ Remove</button>
+          </div>
+        `;
+        studentList.appendChild(div);
+      });
+    }
+
+    function addOrUpdateStudent() {
+      const name = document.getElementById('name').value.trim();
+      const age = parseInt(document.getElementById('age').value.trim());
+      const grade = document.getElementById('grade').value.trim();
+
+      if (name && age && grade) {
+        if (editIndex === -1) {
+          // Normal Add
+          students.push({ name, age, grade });
+        } else {
+          // Edit mode
+          students[editIndex] = { name, age, grade };
+          editIndex = -1; // Reset after update
+          document.querySelector('button[onclick="addOrUpdateStudent()"]').innerText = '➕ Add Student';
+        }
+        saveToLocalStorage();
+        renderStudents();
+        clearInputs();
+      } else {
+        alert("Please fill all fields");
+      }
+    }
+
+    function clearInputs() {
+      document.getElementById('name').value = '';
+      document.getElementById('age').value = '';
+      document.getElementById('grade').value = '';
+    }
+
+    function editStudent(index) {
+      const student = students[index];
+      document.getElementById('name').value = student.name;
+      document.getElementById('age').value = student.age;
+      document.getElementById('grade').value = student.grade;
+      editIndex = index;
+      document.querySelector('button[onclick="addOrUpdateStudent()"]').innerText = '✏️ Update Student';
+    }
+
+    function removeStudent(index) {
+      if (confirm("Are you sure you want to remove this student?")) {
+        students.splice(index, 1);
+        saveToLocalStorage();
+        renderStudents();
+      }
+    }
+
+    function sortStudents() {
+      const sortOption = document.getElementById('sortOption').value;
+      if (sortOption === "name") {
+        students.sort((a, b) => a.name.localeCompare(b.name));
+      } else if (sortOption === "age") {
+        students.sort((a, b) => a.age - b.age);
+      }
+      renderStudents();
+    }
+
+    function searchStudent() {
+      const searchName = document.getElementById('searchName').value.toLowerCase();
+      const filtered = students.filter(student => student.name.toLowerCase().includes(searchName));
+      renderStudents(filtered);
+    }
+
+    renderStudents();
+  </script>
+
+</body>
+</html>
